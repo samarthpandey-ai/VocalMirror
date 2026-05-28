@@ -51,8 +51,9 @@ image = (
 @modal.concurrent(max_inputs=100)
 @modal.asgi_app()
 def serve():
-    from fastapi import FastAPI, UploadFile, File, Query, HTTPException
+    from fastapi import FastAPI, Request, Query, HTTPException
     from fastapi.middleware.cors import CORSMiddleware
+    from starlette.datastructures import UploadFile as StarletteUploadFile
     import gc
     import torch
 
@@ -78,13 +79,23 @@ def serve():
 
     @fastapi_app.post("/analyze")
     async def analyze(
-        file: UploadFile = File(...),
+        request: Request,
         model_size: str = Query("small", regex="^(tiny|small)$"),
     ):
         """
         Stateless endpoint to analyze audio file.
-        Accepts binary files (WAV, MP3, M4A, etc.) via multipart/form-data.
+        Uses Request form data to bypass Pydantic v2 UploadFile forward reference schemas.
         """
+        # Parse form data dynamically
+        form = await request.form()
+        file = form.get("file")
+
+        if not file or not isinstance(file, StarletteUploadFile):
+            raise HTTPException(
+                status_code=400,
+                detail="No audio file package found in multipart parameter 'file'.",
+            )
+
         # Create temp file to save the uploaded stream
         suffix = os.path.splitext(file.filename or ".wav")[1]
         if not suffix:
