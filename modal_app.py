@@ -28,12 +28,11 @@ image = (
     modal.Image.debian_slim(python_version="3.10")
     .apt_install("libsndfile1", "ffmpeg")
     .pip_install_from_requirements("requirements.txt")
-    .run_commands("python -m spacy download en_core_web_sm")
     # Bake in HF pipelines at build time so runtime startup is instant
     .run_commands(
         "python -c 'from transformers import pipeline; "
-        "pipeline(\"text-classification\", model=\"cardiffnlp/twitter-roberta-base-sentiment-latest\", top_k=None); "
-        "pipeline(\"text-classification\", model=\"j-hartmann/emotion-english-distilroberta-base\", top_k=None)'"
+        "pipeline(\"text-classification\", model=\"cardiffnlp/twitter-xlm-roberta-base-sentiment\", top_k=None); "
+        "pipeline(\"zero-shot-classification\", model=\"joeddav/xlm-roberta-large-xnli\")'"
     )
     # Bake in Whisper model weights at build time
     .run_commands(
@@ -138,6 +137,7 @@ def serve():
             # 5. Build structured response
             response_payload = {
                 "text": text,
+                "detected_language": transcription.get("language", "unknown"),
                 "found_fillers": fillers.get("found_fillers", []),
                 "filler_count": fillers.get("filler_count", 0),
                 "filler_density": fillers.get("filler_density", 0.0),

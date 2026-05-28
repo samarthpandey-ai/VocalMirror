@@ -1,7 +1,7 @@
 """
 sentiment_scorer.py
 --------------------
-Uses the cardiffnlp/twitter-roberta-base-sentiment-latest model via
+Uses the cardiffnlp/twitter-xlm-roberta-base-sentiment model via
 HuggingFace Transformers to score text sentiment.
 
 Lazy-loads the pipeline on first call to avoid import-time overhead.
@@ -24,7 +24,7 @@ logger.info("Using device for Sentiment Analysis: %s", _DEVICE)
 # ---------------------------------------------------------------------------
 _pipeline = pipeline(
     task="text-classification",
-    model="cardiffnlp/twitter-roberta-base-sentiment-latest",
+    model="cardiffnlp/twitter-xlm-roberta-base-sentiment",
     top_k=None,  # return all label scores
     truncation=True,
     max_length=512,
@@ -51,7 +51,7 @@ _LABEL_MAP: dict[str, str] = {
 def score_sentiment(text: str) -> dict:
     """Score the linguistic sentiment of *text* using a RoBERTa-based model.
 
-    Model: ``cardiffnlp/twitter-roberta-base-sentiment-latest``
+    Model: ``cardiffnlp/twitter-xlm-roberta-base-sentiment``
 
     Text longer than 512 tokens is automatically truncated by the pipeline.
 

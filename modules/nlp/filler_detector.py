@@ -1,17 +1,15 @@
 """
 filler_detector.py
 -------------------
-Detects filler words and phrases in spoken-word transcripts using a
-combination of regex (for multi-word fillers) and spaCy token matching
-(for single-word fillers).
+Detects filler words and phrases in spoken-word transcripts natively in any language.
 
-spaCy model ``en_core_web_sm`` is lazy-loaded on first call.
+Uses regex for multi-word fillers (e.g. "you know", "I mean") and simple unicode
+regex word tokenization for single-word fillers, removing the spaCy dependency.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 # ---------------------------------------------------------------------------
 # Filler word list
@@ -32,38 +30,16 @@ _MULTI_WORD_PATTERNS: list[tuple[str, re.Pattern]] = [
     for phrase in _MULTI_WORD_FILLERS
 ]
 
-# ---------------------------------------------------------------------------
-# Module-level lazy cache
-# ---------------------------------------------------------------------------
-_nlp: Optional[object] = None  # type: ignore[assignment]
-
-
-def _get_nlp():
-    """Return the cached spaCy model, loading it on first call."""
-    global _nlp
-    if _nlp is None:
-        import spacy  # type: ignore
-
-        try:
-            _nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
-        except OSError:
-            # Fallback: download the model automatically if missing
-            from spacy.cli import download  # type: ignore
-
-            download("en_core_web_sm")
-            _nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
-    return _nlp
-
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
 def detect_fillers(text: str) -> dict:
-    """Detect filler words and phrases in *text*.
+    """Detect filler words and phrases in *text* natively in any language.
 
-    Uses regex for multi-word fillers (e.g. *"you know"*, *"I mean"*) and
-    spaCy token-level matching for single-word fillers.
+    Uses regex for multi-word fillers and unicode-compliant regex tokenization
+    for single-word fillers, maintaining compatibility without external NLP libraries.
 
     Parameters
     ----------
@@ -92,21 +68,22 @@ def detect_fillers(text: str) -> dict:
             "found_fillers": [],
         }
 
-    nlp = _get_nlp()
-    doc = nlp(text)
-
-    tokens = list(doc)
+    # Multilingual unicode tokenization
+    tokens = []
+    for match in re.finditer(r"\w+", text):
+        tokens.append({
+            "text": match.group(),
+            "start": match.start(),
+            "end": match.end()
+        })
     total_words = len(tokens)
 
-    # -----------------------------------------------------------------------
-    # Step 1: Multi-word fillers via regex
-    # We track character spans that are already claimed to avoid double-counting
-    # when a single-word in a multi-word filler is also in the single-word list.
-    # -----------------------------------------------------------------------
+    # claimed_char_spans avoids double-counting single-word fillers that form part of multi-word fillers
     claimed_char_spans: list[tuple[int, int]] = []
     found_fillers: list[str] = []
     filler_positions: list[int] = []  # token indices
 
+    # 1. Multi-word fillers via regex
     for phrase, pattern in _MULTI_WORD_PATTERNS:
         for match in pattern.finditer(text):
             start_char, end_char = match.start(), match.end()
@@ -117,22 +94,20 @@ def detect_fillers(text: str) -> dict:
             found_fillers.append(match.group())
             # Map char span → token index (first token that starts inside span)
             for i, tok in enumerate(tokens):
-                if tok.idx >= start_char and tok.idx < end_char:
+                if tok["start"] >= start_char and tok["start"] < end_char:
                     filler_positions.append(i)
                     break
 
-    # -----------------------------------------------------------------------
-    # Step 2: Single-word fillers via spaCy tokens
-    # -----------------------------------------------------------------------
-    for i, token in enumerate(tokens):
-        if token.lower_ in _SINGLE_WORD_FILLERS:
-            tok_start = token.idx
-            tok_end = token.idx + len(token.text)
+    # 2. Single-word fillers via regex tokens
+    for i, tok in enumerate(tokens):
+        if tok["text"].lower() in _SINGLE_WORD_FILLERS:
+            tok_start = tok["start"]
+            tok_end = tok["end"]
             # Skip if this token's character span is already covered
             if any(s <= tok_start < e for s, e in claimed_char_spans):
                 continue
             claimed_char_spans.append((tok_start, tok_end))
-            found_fillers.append(token.text)
+            found_fillers.append(tok["text"])
             filler_positions.append(i)
 
     filler_count = len(found_fillers)

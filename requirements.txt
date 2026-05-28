@@ -17,10 +17,9 @@ scipy>=1.11.0
 # ── NLP ──────────────────────────────────────────────────────
 transformers>=4.38.0
 huggingface_hub>=0.20.0
-# NOTE: en_core_web_sm is installed separately via:
-#   python -m spacy download en_core_web_sm
-# Do NOT install the spaCy model via pip URL — it breaks with pip >= 23
-spacy>=3.7.2
+sentencepiece>=0.1.99
+protobuf>=3.20.3
+# spaCy has been removed in favor of multilingual regex tokenizers
 
 # ── UI & Visualization ───────────────────────────────────────
 gradio>=4.26.0
