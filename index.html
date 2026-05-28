@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -19,11 +20,8 @@
             background: #0b0f19;
             color: #c9d1d9;
             min-height: 100vh;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             position: relative;
         }
 
@@ -33,12 +31,13 @@
             position: absolute;
             width: 400px;
             height: 400px;
-            background: radial-gradient(circle, rgba(56, 239, 125, 0.15) 0%, rgba(0,0,0,0) 70%);
+            background: radial-gradient(circle, rgba(56, 239, 125, 0.1) 0%, rgba(0,0,0,0) 70%);
             top: -100px;
             left: -100px;
             z-index: 0;
             filter: blur(80px);
             animation: pulse 12s infinite alternate ease-in-out;
+            pointer-events: none;
         }
 
         body::after {
@@ -46,12 +45,13 @@
             position: absolute;
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(124, 131, 253, 0.12) 0%, rgba(0,0,0,0) 70%);
+            background: radial-gradient(circle, rgba(124, 131, 253, 0.08) 0%, rgba(0,0,0,0) 70%);
             bottom: -150px;
             right: -100px;
             z-index: 0;
             filter: blur(100px);
             animation: pulse 16s infinite alternate-reverse ease-in-out;
+            pointer-events: none;
         }
 
         @keyframes pulse {
@@ -63,34 +63,37 @@
             position: relative;
             z-index: 10;
             width: 100%;
-            height: 100vh;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 24px;
+            flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 24px;
+            gap: 24px;
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
-            padding: 0 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 700;
             color: #ffffff;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             background: linear-gradient(135deg, #ffffff 0%, #a8edea 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .logo span {
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             -webkit-text-fill-color: initial;
         }
 
@@ -106,13 +109,6 @@
             align-items: center;
             gap: 8px;
             backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-
-        .badge:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(56, 239, 125, 0.3);
-            color: #38ef7d;
         }
 
         .badge-dot {
@@ -123,41 +119,382 @@
             box-shadow: 0 0 10px #38ef7d;
         }
 
-        .app-frame-wrapper {
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
             flex: 1;
-            width: 100%;
-            background: rgba(13, 17, 23, 0.4);
+        }
+
+        @media (min-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: 320px 2fr 1fr;
+            }
+        }
+
+        /* Glassmorphic Panel */
+        .panel {
+            background: rgba(13, 17, 23, 0.5);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            transition: border-color 0.3s ease;
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
-        .app-frame-wrapper:hover {
-            border-color: rgba(255, 255, 255, 0.12);
+        .panel-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #8b949e;
+            font-weight: 600;
+            margin-bottom: 4px;
         }
 
-        iframe {
+        /* Recording & Upload Styles */
+        .recorder-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 0;
+        }
+
+        .record-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #ff5733 0%, #ff2e00 100%);
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 8px 24px rgba(255, 87, 51, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .record-btn::after {
+            content: '';
+            position: absolute;
             width: 100%;
             height: 100%;
-            border: none;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 87, 51, 0.5);
+            top: 0;
+            left: 0;
+            transform: scale(1);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .record-btn.recording {
+            animation: pulse-border 1.5s infinite ease-out;
+            background: linear-gradient(135deg, #ff2e00 0%, #b30000 100%);
+        }
+
+        @keyframes pulse-border {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 87, 51, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(255, 87, 51, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 87, 51, 0); }
+        }
+
+        .record-status {
+            font-size: 0.9rem;
+            color: #8b949e;
+            font-weight: 500;
+        }
+
+        .record-status.active {
+            color: #ff5733;
+            font-weight: 600;
+        }
+
+        .audio-preview {
+            width: 100%;
+            height: 40px;
+            border-radius: 99px;
+            outline: none;
+            display: none;
+        }
+
+        /* File Dropzone */
+        .dropzone {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: #a8edea;
+            background: rgba(168, 237, 234, 0.05);
+        }
+
+        .dropzone-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .dropzone-text {
+            font-size: 0.82rem;
+            color: #8b949e;
+            line-height: 1.4;
+        }
+
+        .model-toggle-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toggle-group {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .toggle-btn {
+            flex: 1;
             background: transparent;
+            border: none;
+            color: #8b949e;
+            padding: 8px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .analyze-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 14px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(56, 239, 125, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(56, 239, 125, 0.3);
+        }
+
+        .analyze-btn:disabled {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.25);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Center Panel - Radar & Incongruence */
+        .center-panel {
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            justify-content: space-between;
+        }
+
+        #radar-chart {
+            width: 100%;
+            height: 380px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #0d1117;
+        }
+
+        .incongruence-box {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-badge {
+            display: inline-block;
+            font-size: 2.8rem;
+            font-weight: 700;
+            padding: 4px 20px;
+            border-radius: 99px;
+            letter-spacing: -1px;
+            margin: 8px 0;
+            transition: all 0.3s ease;
+        }
+
+        .score-badge.low { color: #38ef7d; background: rgba(56,239,125,0.12); border: 1px solid rgba(56,239,125,0.3); }
+        .score-badge.medium { color: #ffc300; background: rgba(255,195,0,0.12); border: 1px solid rgba(255,195,0,0.3); }
+        .score-badge.high { color: #ff5733; background: rgba(255,87,51,0.12); border: 1px solid rgba(255,87,51,0.3); }
+
+        .score-interp {
+            font-size: 0.88rem;
+            color: #c9d1d9;
+            max-width: 440px;
+            line-height: 1.5;
+        }
+
+        /* Right Panel - Transcript & Table */
+        .transcript-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 0.88rem;
+            line-height: 1.7;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+            color: #e6edf3;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            width: 100%;
+        }
+
+        /* Metrics Table & Progress Bar */
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .metrics-table td {
+            padding: 8px 4px;
+            vertical-align: middle;
+        }
+
+        .metric-label {
+            font-size: 0.82rem;
+            color: #8b949e;
+            white-space: nowrap;
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .progress-bar-bg {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            width: 0%;
+            transition: width 0.6s cubic-bezier(0.1, 0.8, 0.2, 1);
+        }
+
+        .progress-text {
+            font-size: 0.78rem;
+            color: #8b949e;
+            min-width: 32px;
+            text-align: right;
+        }
+
+        /* Glowing Loader Overlay */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 255, 255, 0.05);
+            border-top: 3px solid #38ef7d;
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+            box-shadow: 0 0 20px rgba(56, 239, 125, 0.3);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #ffffff;
+            letter-spacing: 0.05em;
         }
 
         footer {
-            margin-top: 12px;
+            margin-top: 24px;
+            padding: 24px 0;
             text-align: center;
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             color: #8b949e;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
             z-index: 10;
         }
     </style>
 </head>
 <body>
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+        <div class="loader-text" id="loader-status">Processing speech models...</div>
+    </div>
+
     <div class="container">
         <header>
             <div class="logo">
@@ -165,21 +502,478 @@
             </div>
             <div class="badge">
                 <div class="badge-dot"></div>
-                Powered by A10G Cloud GPU via Modal
+                Connected to A10G Cloud GPU API
             </div>
         </header>
 
-        <div class="app-frame-wrapper">
-            <iframe 
-                src="https://samarthpan123--vocal-mirror-serve.modal.run" 
-                allow="microphone; clipboard-write"
-                referrerpolicy="no-referrer"
-            ></iframe>
+        <div class="dashboard-grid">
+            <!-- Left Column: Input Panel -->
+            <div class="panel">
+                <div class="panel-title">Speech Input</div>
+                
+                <div class="recorder-wrapper">
+                    <button class="record-btn" id="record-btn">🎤</button>
+                    <div class="record-status" id="record-status">Click to record speech</div>
+                    <audio class="audio-preview" id="audio-preview" controls></audio>
+                </div>
+
+                <div class="dropzone" id="dropzone">
+                    <div class="dropzone-icon">⬆</div>
+                    <div class="dropzone-text" id="dropzone-text">Drag & drop speech audio file<br><span style="font-size:0.75rem;opacity:0.6">WAV, MP3, M4A up to 10MB</span></div>
+                </div>
+
+                <div class="model-toggle-wrapper">
+                    <label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:#8b949e;font-weight:600">Whisper ASR Model</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn" data-model="tiny">Tiny (Faster)</button>
+                        <button class="toggle-btn active" data-model="small">Small (Accurate)</button>
+                    </div>
+                </div>
+
+                <button class="analyze-btn" id="analyze-btn" disabled>
+                    <span>✦</span> Analyze My Speech
+                </button>
+            </div>
+
+            <!-- Center Column: Radar & Score -->
+            <div class="panel center-panel">
+                <div class="panel-title">Awaiting speech audio...</div>
+                <div id="radar-chart"></div>
+                <div class="incongruence-box" id="incongruence-box">
+                    <p style="color:#8b949e">Analysis results will be displayed above after uploading or recording speech audio.</p>
+                </div>
+            </div>
+
+            <!-- Right Column: Transcript & Breakdown -->
+            <div class="panel">
+                <div class="panel-title">Speech Transcript</div>
+                <div class="transcript-box" id="transcript-box">
+                    Transcript will appear here...
+                </div>
+
+                <hr class="divider">
+
+                <div class="panel-title">Profile Dimensions</div>
+                <table class="metrics-table">
+                    <tr>
+                        <td class="metric-label">Vocal Confidence</td>
+                        <td>
+                            <div class="progress-container">
+                                <div class="progress-bar-bg"><div class="progress-bar-fill" id="pb-vocal-conf" style="background:#38ef7d"></div></div>
+                                <span class="progress-text" id="pt-vocal-conf">0%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="metric-label">Clarity</td>
+                        <td>
+                            <div class="progress-container">
+                                <div class="progress-bar-bg"><div class="progress-bar-fill" id="pb-clarity" style="background:#a8edea"></div></div>
+                                <span class="progress-text" id="pt-clarity">0%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="metric-label">Filler Control</td>
+                        <td>
+                            <div class="progress-container">
+                                <div class="progress-bar-bg"><div class="progress-bar-fill" id="pb-fillers" style="background:#ffc300"></div></div>
+                                <span class="progress-text" id="pt-fillers">0%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="metric-label">Linguistic Sentiment</td>
+                        <td>
+                            <div class="progress-container">
+                                <div class="progress-bar-bg"><div class="progress-bar-fill" id="pb-sentiment" style="background:#7c83fd"></div></div>
+                                <span class="progress-text" id="pt-sentiment">0%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="metric-label">Congruence</td>
+                        <td>
+                            <div class="progress-container">
+                                <div class="progress-bar-bg"><div class="progress-bar-fill" id="pb-congruence" style="background:#ff9a9e"></div></div>
+                                <span class="progress-text" id="pt-congruence">0%</span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
         </div>
 
         <footer>
-            VocalMirror v1.0 · Multimodal AI Public Speaking Coach · Built with Whisper & RoBERTa
+            VocalMirror v1.0 · Multimodal AI Public Speaking Coach · Decoupled Cloud Architecture (Modal + Vercel)
         </footer>
     </div>
+
+    <script>
+        // --- State Management ---
+        const API_URL = "https://samarthpan123--vocal-mirror-serve.modal.run/analyze";
+        let activeModel = "small";
+        let audioBlob = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // --- DOM Cache ---
+        const recordBtn = document.getElementById("record-btn");
+        const recordStatus = document.getElementById("record-status");
+        const audioPreview = document.getElementById("audio-preview");
+        const dropzone = document.getElementById("dropzone");
+        const dropzoneText = document.getElementById("dropzone-text");
+        const toggleButtons = document.querySelectorAll(".toggle-btn");
+        const analyzeBtn = document.getElementById("analyze-btn");
+        const loader = document.getElementById("loader");
+        const loaderStatus = document.getElementById("loader-status");
+        const transcriptBox = document.getElementById("transcript-box");
+        const incongruenceBox = document.getElementById("incongruence-box");
+
+        // --- Initialize Blank Plotly Radar ---
+        function renderEmptyRadar() {
+            const theta = ["Vocal Confidence", "Clarity", "Filler Control", "Linguistic Sentiment", "Congruence", "Vocal Confidence"];
+            const idealR = [0.85, 0.85, 0.85, 0.85, 0.85, 0.85];
+            const userR = [0.0, 0.0, 0.0, 0.0, 1.0, 0.0];
+
+            const traceIdeal = {
+                type: 'scatterpolar',
+                r: idealR,
+                theta: theta,
+                fill: 'toself',
+                fillcolor: 'rgba(255, 255, 255, 0.03)',
+                line: { color: 'rgba(255, 255, 255, 0.15)', dash: 'dot', width: 1 },
+                marker: { size: 0 },
+                name: 'Ideal Speaker',
+                hovertemplate: 'Ideal: %{r:.2f}<extra></extra>'
+            };
+
+            const traceUser = {
+                type: 'scatterpolar',
+                r: userR,
+                theta: theta,
+                fill: 'toself',
+                fillcolor: 'rgba(255, 195, 0, 0.1)',
+                line: { color: '#ffc300', width: 2 },
+                marker: { color: '#ffc300', opacity: 0.9, size: 5 },
+                name: 'Your Profile',
+                hovertemplate: 'Score: %{r:.2f}<extra></extra>'
+            };
+
+            const layout = {
+                polar: {
+                    radialaxis: {
+                        visible: true,
+                        range: [0, 1],
+                        gridcolor: 'rgba(255, 255, 255, 0.08)',
+                        linecolor: 'rgba(255, 255, 255, 0.08)',
+                        tickfont: { color: 'rgba(255, 255, 255, 0.25)', size: 9 },
+                        tickvals: [0.25, 0.5, 0.75, 1.0],
+                        ticktext: ['25%', '50%', '75%', '100%']
+                    },
+                    angularaxis: {
+                        gridcolor: 'rgba(255, 255, 255, 0.08)',
+                        linecolor: 'rgba(255, 255, 255, 0.08)',
+                        tickfont: { color: '#8b949e', family: 'Outfit, sans-serif', size: 11 }
+                    },
+                    bgcolor: '#0d1117'
+                },
+                showlegend: true,
+                legend: {
+                    bgcolor: 'rgba(255, 255, 255, 0.02)',
+                    bordercolor: 'rgba(255, 255, 255, 0.05)',
+                    borderwidth: 1,
+                    font: { color: '#8b949e', family: 'Outfit, sans-serif', size: 10 },
+                    x: 0.8,
+                    y: 0.02
+                },
+                paper_bgcolor: '#0d1117',
+                plot_bgcolor: '#0d1117',
+                margin: { t: 50, b: 30, l: 50, r: 50 },
+                title: {
+                    text: 'Awaiting Analysis...',
+                    font: { color: '#8b949e', family: 'Outfit, sans-serif', size: 15 },
+                    x: 0.5,
+                    xanchor: 'center'
+                }
+            };
+
+            Plotly.newPlot('radar-chart', [traceIdeal, traceUser], layout, {responsive: true, displayModeBar: false});
+        }
+
+        renderEmptyRadar();
+
+        // --- Model Selection ---
+        toggleButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                toggleButtons.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                activeModel = btn.dataset.model;
+            });
+        });
+
+        // --- Native Microphone Recording ---
+        recordBtn.addEventListener("click", async () => {
+            if (!isRecording) {
+                // Start Recording
+                audioChunks = [];
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+                    mediaRecorder.onstop = () => {
+                        audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        audioPreview.src = audioUrl;
+                        audioPreview.style.display = "block";
+                        analyzeBtn.removeAttribute("disabled");
+                        dropzoneText.innerHTML = `Recorded audio captured successfully!<br><span style="font-size:0.75rem;opacity:0.6">${(audioBlob.size / 1024 / 1024).toFixed(2)} MB wav payload</span>`;
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.classList.add("recording");
+                    recordBtn.innerText = "⏹";
+                    recordStatus.innerText = "Recording... Click to stop";
+                    recordStatus.classList.add("active");
+                    analyzeBtn.setAttribute("disabled", "true");
+                } catch (err) {
+                    console.error("Microphone access denied:", err);
+                    alert("Microphone access denied. Please verify microphone permissions inside your browser.");
+                }
+            } else {
+                // Stop Recording
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.classList.remove("recording");
+                recordBtn.innerText = "🎤";
+                recordStatus.innerText = "Speech captured! Ready to analyze.";
+                recordStatus.classList.remove("active");
+            }
+        });
+
+        // --- File Dropzone ---
+        dropzone.addEventListener("click", () => {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = "audio/*";
+            input.onchange = e => handleFiles(e.target.files);
+            input.click();
+        });
+
+        dropzone.addEventListener("dragover", e => {
+            e.preventDefault();
+            dropzone.classList.add("dragover");
+        });
+
+        dropzone.addEventListener("dragleave", () => {
+            dropzone.classList.remove("dragover");
+        });
+
+        dropzone.addEventListener("drop", e => {
+            e.preventDefault();
+            dropzone.classList.remove("dragover");
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.startsWith("audio/")) {
+                    audioBlob = file;
+                    audioPreview.src = URL.createObjectURL(file);
+                    audioPreview.style.display = "block";
+                    analyzeBtn.removeAttribute("disabled");
+                    dropzoneText.innerHTML = `<strong>${file.name}</strong><br><span style="font-size:0.75rem;opacity:0.6">${(file.size / 1024 / 1024).toFixed(2)} MB file package loaded</span>`;
+                } else {
+                    alert("Unsupported file type. Please upload a standard audio file.");
+                }
+            }
+        }
+
+        // --- Highlight Filler Words ---
+        function highlightFillers(text, fillers) {
+            if (!fillers || fillers.length === 0) return text;
+            const uniqueFillers = [...new Set(fillers)].sort((a, b) => b.length - a.length);
+            let highlighted = text;
+            uniqueFillers.forEach(filler => {
+                const regex = new RegExp(`\\b${filler}\\b`, 'gi');
+                highlighted = highlighted.replace(regex, match => {
+                    return `<mark style="background:rgba(255,195,0,0.25);color:#ffc300;border-radius:3px;padding:0 2px;">${match}</mark>`;
+                });
+            });
+            return highlighted;
+        }
+
+        // --- Fetch & Pipeline Processing ---
+        analyzeBtn.addEventListener("click", async () => {
+            if (!audioBlob) return;
+
+            // Trigger loading state
+            loader.style.display = "flex";
+            loaderStatus.innerText = "Transcribing speech via GPU ASR...";
+
+            const formData = new FormData();
+            formData.append("file", audioBlob, "speech_input.wav");
+
+            try {
+                const response = await fetch(`${API_URL}?model_size=${activeModel}`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errInfo = await response.json();
+                    throw new Error(errInfo.detail || "Stateless network analysis failed.");
+                }
+
+                const data = await response.json();
+                
+                // Update UI elements
+                loaderStatus.innerText = "Updating analytical profile...";
+                
+                // 1. Render Transcript with Highlighting
+                const highlightedHtml = highlightFillers(data.text, data.found_fillers);
+                const fillerNote = data.filler_count > 0 
+                    ? `<div style="margin-top:0.75rem;font-size:0.8rem;color:#8b949e;"><span style="color:#ffc300">●</span> ${data.filler_count} filler words highlighted in amber</div>`
+                    : `<div style="margin-top:0.75rem;font-size:0.8rem;color:#38ef7d;">✓ Excellent filler control. No fillers detected.</div>`;
+                
+                transcriptBox.innerHTML = `
+                    <div style="font-family:'Outfit', sans-serif; font-size:0.88rem; line-height:1.7; color:#c9d1d9; max-height: 180px; overflow-y: auto;">
+                        ${highlightedHtml}
+                    </div>
+                    ${fillerNote}
+                `;
+
+                // 2. Render Incongruence Score Badge & Interpretation
+                const scorePercent = Math.round(data.radar.incongruence_score * 100);
+                incongruenceBox.innerHTML = `
+                    <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#8b949e;margin-bottom:0.75rem;">
+                        Incongruence Score
+                    </div>
+                    <div class="score-badge ${data.severity}">
+                        ${scorePercent}%
+                    </div>
+                    <div class="score-interp">
+                        ${data.interpretation}
+                    </div>
+                `;
+
+                // 3. Update Progress Bars
+                const dimensions = [
+                    { id: "pb-vocal-conf", textId: "pt-vocal-conf", value: data.radar.vocal_confidence },
+                    { id: "pb-clarity", textId: "pt-clarity", value: data.radar.clarity },
+                    { id: "pb-fillers", textId: "pt-fillers", value: data.radar.filler_word_density },
+                    { id: "pb-sentiment", textId: "pt-sentiment", value: data.radar.linguistic_sentiment },
+                    { id: "pb-congruence", textId: "pt-congruence", value: data.radar.congruence }
+                ];
+
+                dimensions.forEach(dim => {
+                    const fill = document.getElementById(dim.id);
+                    const txt = document.getElementById(dim.textId);
+                    const pctVal = Math.round(dim.value * 100);
+                    fill.style.width = `${pctVal}%`;
+                    txt.innerText = `${pctVal}%`;
+                });
+
+                // 4. Render client side Plotly Radar
+                const theta = ["Vocal Confidence", "Clarity", "Filler Control", "Linguistic Sentiment", "Congruence", "Vocal Confidence"];
+                const idealR = [0.85, 0.85, 0.85, 0.85, 0.85, 0.85];
+                const userR = [
+                    data.radar.vocal_confidence,
+                    data.radar.clarity,
+                    data.radar.filler_word_density,
+                    data.radar.linguistic_sentiment,
+                    data.radar.congruence,
+                    data.radar.vocal_confidence
+                ];
+
+                const traceIdeal = {
+                    type: 'scatterpolar',
+                    r: idealR,
+                    theta: theta,
+                    fill: 'toself',
+                    fillcolor: 'rgba(255, 255, 255, 0.03)',
+                    line: { color: 'rgba(255, 255, 255, 0.15)', dash: 'dot', width: 1 },
+                    marker: { size: 0 },
+                    name: 'Ideal Speaker',
+                    hovertemplate: 'Ideal: %{r:.2f}<extra></extra>'
+                };
+
+                let userFillColor = 'rgba(255, 195, 0, 0.25)'; // medium amber
+                let userLineColor = '#ffc300';
+                if (data.severity === 'low') {
+                    userFillColor = 'rgba(56, 239, 125, 0.25)'; // low incongruence (green)
+                    userLineColor = '#38ef7d';
+                } else if (data.severity === 'high') {
+                    userFillColor = 'rgba(255, 87, 51, 0.25)'; // high incongruence (red)
+                    userLineColor = '#ff5733';
+                }
+
+                const traceUser = {
+                    type: 'scatterpolar',
+                    r: userR,
+                    theta: theta,
+                    fill: 'toself',
+                    fillcolor: userFillColor,
+                    line: { color: userLineColor, width: 2.5 },
+                    marker: { color: userLineColor, opacity: 0.9, size: 6 },
+                    name: 'Your Profile',
+                    hovertemplate: 'Score: %{r:.2f}<extra></extra>'
+                };
+
+                const layout = {
+                    polar: {
+                        radialaxis: {
+                            visible: true,
+                            range: [0, 1],
+                            gridcolor: 'rgba(255, 255, 255, 0.08)',
+                            linecolor: 'rgba(255, 255, 255, 0.08)',
+                            tickfont: { color: 'rgba(255, 255, 255, 0.25)', size: 9 },
+                            tickvals: [0.25, 0.5, 0.75, 1.0],
+                            ticktext: ['25%', '50%', '75%', '100%']
+                        },
+                        angularaxis: {
+                            gridcolor: 'rgba(255, 255, 255, 0.08)',
+                            linecolor: 'rgba(255, 255, 255, 0.08)',
+                            tickfont: { color: '#c9d1d9', family: 'Outfit, sans-serif', size: 12 }
+                        },
+                        bgcolor: '#0d1117'
+                    },
+                    showlegend: true,
+                    legend: {
+                        bgcolor: 'rgba(255, 255, 255, 0.02)',
+                        bordercolor: 'rgba(255, 255, 255, 0.05)',
+                        borderwidth: 1,
+                        font: { color: '#c9d1d9', family: 'Outfit, sans-serif', size: 10 },
+                        x: 0.8,
+                        y: 0.02
+                    },
+                    paper_bgcolor: '#0d1117',
+                    plot_bgcolor: '#0d1117',
+                    margin: { t: 60, b: 30, l: 50, r: 50 },
+                    title: {
+                        text: 'Speaking Profile Radar',
+                        font: { color: '#ffffff', family: 'Outfit, sans-serif', size: 16 },
+                        x: 0.5,
+                        xanchor: 'center'
+                    }
+                };
+
+                Plotly.newPlot('radar-chart', [traceIdeal, traceUser], layout, {responsive: true, displayModeBar: false});
+
+            } catch (err) {
+                console.error("Speech analysis failed:", err);
+                alert(`Analysis Error: ${err.message}`);
+            } finally {
+                loader.style.display = "none";
+            }
+        });
+    </script>
 </body>
 </html>

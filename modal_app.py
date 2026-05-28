@@ -1,9 +1,9 @@
 """
 modal_app.py
 ────────────
-Modal deployment definition for VocalMirror.
-Bakes HF/Whisper models directly into the container image to eliminate startup latency,
-runs the speech modules on an A10G cloud GPU, and exposes the Gradio app via FastAPI.
+Decoupled API serverless backend for VocalMirror running on Modal.com.
+Provides a high-speed, GPU-accelerated REST API endpoint `/analyze` that
+processes audio uploads on an A10G GPU and returns structured JSON analysis results.
 
 Usage:
     modal deploy modal_app.py
@@ -13,7 +13,12 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
+import shutil
+import logging
 import modal
+
+logger = logging.getLogger(__name__)
 
 # Define the Modal App
 app = modal.App("vocal-mirror")
@@ -46,21 +51,23 @@ image = (
 @modal.concurrent(max_inputs=100)
 @modal.asgi_app()
 def serve():
-    from fastapi import FastAPI
+    from fastapi import FastAPI, UploadFile, File, Query, HTTPException
     from fastapi.middleware.cors import CORSMiddleware
-    from gradio.routes import mount_gradio_app
+    import gc
+    import torch
 
     # Ensure python knows where to import from
     sys.path.append("/root")
     os.chdir("/root")
 
-    from app import build_ui
+    from modules.speech import transcribe_audio, extract_acoustic_features, compute_acoustic_nervousness
+    from modules.nlp import score_sentiment, score_confidence, detect_fillers, analyze_vocabulary
+    from modules.fusion import fuse_scores, aggregate_nlp_outputs
 
     # Create FastAPI host
-    fastapi_app = FastAPI(title="VocalMirror Backend")
+    fastapi_app = FastAPI(title="VocalMirror Backend API")
 
-    # Add robust CORS middleware to allow cross-origin requests from Vercel
-    # Note: allow_credentials MUST be False when using wildcard '*' in allow_origins
+    # Add robust CORS middleware for wildcard origins (allow_credentials must be False for wildcard)
     fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -69,19 +76,93 @@ def serve():
         allow_headers=["*"],
     )
 
-    # Security middleware to strip SAMEORIGIN and allow iframe embedding everywhere
-    @fastapi_app.middleware("http")
-    async def bypass_iframe_restrictions(request, call_next):
-        response = await call_next(request)
-        # Safe deletion from MutableHeaders in Starlette/FastAPI using 'del' instead of '.pop()'
-        if "X-Frame-Options" in response.headers:
-            del response.headers["X-Frame-Options"]
-        # Add modern Content Security Policy for cross-domain embedding
-        response.headers["Content-Security-Policy"] = "frame-ancestors *"
-        return response
+    @fastapi_app.post("/analyze")
+    async def analyze(
+        file: UploadFile = File(...),
+        model_size: str = Query("small", regex="^(tiny|small)$"),
+    ):
+        """
+        Stateless endpoint to analyze audio file.
+        Accepts binary files (WAV, MP3, M4A, etc.) via multipart/form-data.
+        """
+        # Create temp file to save the uploaded stream
+        suffix = os.path.splitext(file.filename or ".wav")[1]
+        if not suffix:
+            suffix = ".wav"
+        
+        tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+        tmp_path = tmp.name
+        
+        try:
+            # Write uploaded data to temp file
+            shutil.copyfileobj(file.file, tmp)
+            tmp.close()
 
-    # Build Gradio Block UI
-    demo, theme, css = build_ui()
+            # Execute pipeline
+            # 1. Speech Transcription
+            transcription = transcribe_audio(tmp_path, model_size=model_size)
+            text = transcription.get("text", "").strip()
+            
+            if not text:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Audio could not be transcribed. Please check recording quality or duration.",
+                )
 
-    # Mount Gradio block to FastAPI root
-    return mount_gradio_app(fastapi_app, demo, path="/")
+            # 2. Acoustic Feature Extraction
+            acoustic_features = extract_acoustic_features(tmp_path)
+            acoustic_scores = compute_acoustic_nervousness(acoustic_features)
+
+            # 3. NLP Scoring
+            sentiment = score_sentiment(text)
+            confidence = score_confidence(text)
+            fillers = detect_fillers(text)
+            vocab = analyze_vocabulary(text)
+
+            # 4. Fusion Scoring
+            nlp_aggregated = aggregate_nlp_outputs(sentiment, confidence, fillers, vocab)
+            fusion = fuse_scores(acoustic_scores, nlp_aggregated)
+
+            # 5. Build structured response
+            response_payload = {
+                "text": text,
+                "found_fillers": fillers.get("found_fillers", []),
+                "filler_count": fillers.get("filler_count", 0),
+                "filler_density": fillers.get("filler_density", 0.0),
+                "severity": fusion.get("severity", "medium"),
+                "interpretation": fusion.get("interpretation", ""),
+                "radar": fusion.get("radar", {}),
+                "metrics": {
+                    "pitch_variance_norm": float(acoustic_scores.get("pitch_variance_norm", 0.0)),
+                    "speech_rate_norm": float(acoustic_scores.get("speech_rate_norm", 0.0)),
+                    "pause_freq_norm": float(acoustic_scores.get("pause_freq_norm", 0.0)),
+                    "positive_sentiment": float(sentiment.get("positive", 0.0)),
+                    "neutral_sentiment": float(sentiment.get("neutral", 0.0)),
+                    "negative_sentiment": float(sentiment.get("negative", 0.0)),
+                    "emotion_confidence": float(confidence.get("emotion_confidence", 0.0)),
+                    "lexicon_confidence": float(confidence.get("lexicon_confidence", 0.0)),
+                    "vocab_richness": float(vocab.get("vocab_richness", 0.0)),
+                    "syntactic_fluency": float(vocab.get("syntactic_fluency", 0.0)),
+                }
+            }
+            return response_payload
+
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.error("API analysis failed: %s", exc, exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Speech analysis failed: {str(exc)}")
+        
+        finally:
+            # Clean up temp audio file
+            if os.path.exists(tmp_path):
+                try:
+                    os.unlink(tmp_path)
+                except Exception:
+                    pass
+            # Trigger garbage collection and purge GPU cache
+            gc.collect()
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
+
+    return fastapi_app
