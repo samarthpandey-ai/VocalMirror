@@ -9,8 +9,26 @@ No external ML calls happen here — pure array arithmetic.
 """
 
 from __future__ import annotations
+import math
 import numpy as np
 from typing import TypedDict
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Safe conversion helper
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _safe_float(val: any, default: float = 0.0) -> float:
+    """Safely convert a value to a float, falling back to a default if None or NaN."""
+    if val is None:
+        return default
+    try:
+        f_val = float(val)
+        if math.isnan(f_val) or math.isinf(f_val):
+            return default
+        return f_val
+    except (ValueError, TypeError):
+        return default
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -39,6 +57,7 @@ class RadarDimensions(TypedDict):
     filler_word_density: float    # [0,1]  inverted: higher = fewer fillers
     linguistic_sentiment: float   # [0,1]  positive sentiment
     incongruence_score: float     # [0,1]  gap between vocal & linguistic confidence
+    congruence: float             # [0,1]  congruence = 1.0 - incongruence_score
 
 
 class FusionResult(TypedDict):
@@ -107,7 +126,7 @@ def fuse_scores(
 ) -> FusionResult:
     """
     Fuse acoustic and NLP scores into the 5-dimension radar chart values
-    and compute the Incongruence Score.
+    and compute the Incongruence Score and Congruence Score.
 
     Dimensions
     ----------
@@ -116,6 +135,7 @@ def fuse_scores(
     3. filler_word_density   = 1 - filler_density  (inverted so higher = better)
     4. linguistic_sentiment  = positive sentiment probability
     5. incongruence_score    = |vocal_confidence - linguistic_confidence|
+    6. congruence            = 1 - incongruence_score
 
     Args:
         acoustic: Output of compute_acoustic_nervousness()
@@ -125,26 +145,29 @@ def fuse_scores(
         FusionResult with radar dimensions, interpretation text, and severity.
     """
     # ── Dimension 1: Vocal Confidence ──────────────────────────────────────
-    vocal_confidence = _clip(acoustic["vocal_confidence"])
+    vocal_confidence = _clip(_safe_float(acoustic.get("vocal_confidence"), 0.5))
 
     # ── Dimension 2: Clarity (vocab richness × syntactic fluency) ──────────
-    clarity = _clip(
-        float(nlp["vocab_richness"]) * float(nlp["syntactic_fluency"])
-    )
+    vocab_richness = _safe_float(nlp.get("vocab_richness"), 0.5)
+    syntactic_fluency = _safe_float(nlp.get("syntactic_fluency"), 0.5)
+    clarity = _clip(vocab_richness * syntactic_fluency)
 
     # ── Dimension 3: Filler Word Density (inverted) ─────────────────────────
-    filler_word_density_score = _clip(1.0 - float(nlp["filler_word_density"]))
+    filler_word_density = _safe_float(nlp.get("filler_word_density"), 0.0)
+    filler_word_density_score = _clip(1.0 - filler_word_density)
 
     # ── Dimension 4: Linguistic Sentiment ───────────────────────────────────
-    linguistic_sentiment = _clip(float(nlp["linguistic_sentiment"]))
+    linguistic_sentiment = _clip(_safe_float(nlp.get("linguistic_sentiment"), 0.5))
 
-    # ── Dimension 5: Incongruence Score ─────────────────────────────────────
+    # ── Dimension 5: Incongruence Score & Congruence ────────────────────────
     # Weighted linguistic confidence: 60% emotion proxy + 40% sentiment
+    linguistic_confidence_val = _safe_float(nlp.get("linguistic_confidence"), 0.5)
     linguistic_confidence = _clip(
-        0.6 * float(nlp["linguistic_confidence"])
-        + 0.4 * float(nlp["linguistic_sentiment"])
+        0.6 * linguistic_confidence_val
+        + 0.4 * linguistic_sentiment
     )
     incongruence_score = _clip(abs(vocal_confidence - linguistic_confidence))
+    congruence = _clip(1.0 - incongruence_score)
 
     radar: RadarDimensions = {
         "vocal_confidence": vocal_confidence,
@@ -152,6 +175,7 @@ def fuse_scores(
         "filler_word_density": filler_word_density_score,
         "linguistic_sentiment": linguistic_sentiment,
         "incongruence_score": incongruence_score,
+        "congruence": congruence,
     }
 
     interpretation, severity = _interpret_incongruence(incongruence_score)
@@ -183,9 +207,9 @@ def aggregate_nlp_outputs(
         NLPScores typed dict.
     """
     return NLPScores(
-        linguistic_sentiment=float(sentiment.get("linguistic_sentiment", 0.5)),
-        linguistic_confidence=float(confidence.get("linguistic_confidence", 0.5)),
-        filler_word_density=float(fillers.get("filler_word_density", 0.0)),
-        vocab_richness=float(vocab.get("vocab_richness", 0.5)),
-        syntactic_fluency=float(vocab.get("syntactic_fluency", 0.5)),
+        linguistic_sentiment=_safe_float(sentiment.get("linguistic_sentiment"), 0.5),
+        linguistic_confidence=_safe_float(confidence.get("linguistic_confidence"), 0.5),
+        filler_word_density=_safe_float(fillers.get("filler_word_density"), 0.0),
+        vocab_richness=_safe_float(vocab.get("vocab_richness"), 0.5),
+        syntactic_fluency=_safe_float(vocab.get("syntactic_fluency"), 0.5),
     )
