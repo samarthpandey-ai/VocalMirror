@@ -47,6 +47,7 @@ image = (
 @modal.asgi_app()
 def serve():
     from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
     from gradio.routes import mount_gradio_app
 
     # Ensure python knows where to import from
@@ -57,6 +58,25 @@ def serve():
 
     # Create FastAPI host
     fastapi_app = FastAPI(title="VocalMirror Backend")
+
+    # Add robust CORS middleware to allow cross-origin requests from Vercel
+    fastapi_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # Security middleware to strip SAMEORIGIN and allow iframe embedding everywhere
+    @fastapi_app.middleware("http")
+    async def bypass_iframe_restrictions(request, call_next):
+        response = await call_next(request)
+        # Pop X-Frame-Options to prevent browser from blocking iframe load
+        response.headers.pop("X-Frame-Options", None)
+        # Add modern Content Security Policy for cross-domain embedding
+        response.headers["Content-Security-Policy"] = "frame-ancestors *"
+        return response
 
     # Build Gradio Block UI
     demo, theme, css = build_ui()
