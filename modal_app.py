@@ -51,6 +51,7 @@ image = (
 @modal.concurrent(max_inputs=100)
 @modal.asgi_app()
 def serve():
+    global Request
     from fastapi import FastAPI, Request, Query, HTTPException
     from fastapi.middleware.cors import CORSMiddleware
     from starlette.datastructures import UploadFile as StarletteUploadFile
