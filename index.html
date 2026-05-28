@@ -852,8 +852,32 @@
                 });
 
                 if (!response.ok) {
-                    const errInfo = await response.json();
-                    throw new Error(errInfo.detail || "Stateless network analysis failed.");
+                    let errMsg = "Stateless network analysis failed.";
+                    try {
+                        const errData = await response.json();
+                        if (errData && errData.detail) {
+                            if (typeof errData.detail === "string") {
+                                errMsg = errData.detail;
+                            } else if (Array.isArray(errData.detail)) {
+                                errMsg = errData.detail.map(e => {
+                                    const loc = Array.isArray(e.loc) ? e.loc.join('.') : (e.loc || '');
+                                    return `${loc ? loc + ': ' : ''}${e.msg || JSON.stringify(e)}`;
+                                }).join("; ");
+                            } else {
+                                errMsg = JSON.stringify(errData.detail);
+                            }
+                        } else {
+                            errMsg = JSON.stringify(errData);
+                        }
+                    } catch (jsonErr) {
+                        try {
+                            const text = await response.text();
+                            errMsg = text || `HTTP Error ${response.status}: ${response.statusText}`;
+                        } catch (txtErr) {
+                            errMsg = `HTTP Error ${response.status}: ${response.statusText}`;
+                        }
+                    }
+                    throw new Error(errMsg);
                 }
 
                 const data = await response.json();

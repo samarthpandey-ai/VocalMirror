@@ -80,7 +80,7 @@ def serve():
     @fastapi_app.post("/analyze")
     async def analyze(
         request: Request,
-        model_size: str = Query("small", regex="^(tiny|small)$"),
+        model_size: str = "small",
     ):
         """
         Stateless endpoint to analyze audio file.
