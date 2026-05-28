@@ -60,10 +60,11 @@ def serve():
     fastapi_app = FastAPI(title="VocalMirror Backend")
 
     # Add robust CORS middleware to allow cross-origin requests from Vercel
+    # Note: allow_credentials MUST be False when using wildcard '*' in allow_origins
     fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
-        allow_credentials=True,
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )
