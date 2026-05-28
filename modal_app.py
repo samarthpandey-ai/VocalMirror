@@ -28,11 +28,13 @@ image = (
     modal.Image.debian_slim(python_version="3.10")
     .apt_install("libsndfile1", "ffmpeg")
     .pip_install_from_requirements("requirements.txt")
-    # Bake in HF pipelines at build time so runtime startup is instant
+    # Bake in HF pipelines and XLS-R model weights at build time so runtime startup is instant
     .run_commands(
-        "python -c 'from transformers import pipeline; "
+        "python -c 'from transformers import pipeline, Wav2Vec2FeatureExtractor, Wav2Vec2Model; "
         "pipeline(\"text-classification\", model=\"cardiffnlp/twitter-xlm-roberta-base-sentiment\", top_k=None); "
-        "pipeline(\"zero-shot-classification\", model=\"joeddav/xlm-roberta-large-xnli\")'"
+        "pipeline(\"zero-shot-classification\", model=\"joeddav/xlm-roberta-large-xnli\"); "
+        "Wav2Vec2FeatureExtractor.from_pretrained(\"facebook/wav2vec2-large-xlsr-53\"); "
+        "Wav2Vec2Model.from_pretrained(\"facebook/wav2vec2-large-xlsr-53\")'"
     )
     # Bake in Whisper model weights at build time
     .run_commands(

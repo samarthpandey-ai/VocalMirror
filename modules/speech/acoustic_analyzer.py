@@ -246,10 +246,18 @@ def extract_acoustic_features(audio_path: str) -> dict:
     speech_rate = _compute_speech_rate(y, sr, duration)
     pause_frequency = _compute_pause_frequency(y, sr, duration)
 
+    # Extract 16kHz audio array for Wav2Vec2
+    try:
+        y_16k, _ = librosa.load(audio_path, sr=16000, mono=True)
+    except Exception as exc:
+        logger.error("Failed to load 16kHz audio for XLS-R: %s", exc)
+        y_16k = np.zeros(0, dtype=np.float32)
+
     return {
         "pitch_variance": pitch_variance,
         "speech_rate": speech_rate,
         "pause_frequency": pause_frequency,
         "duration": duration,
         "raw_f0": raw_f0,
+        "raw_audio_16k": y_16k,
     }
