@@ -73,8 +73,9 @@ def serve():
     @fastapi_app.middleware("http")
     async def bypass_iframe_restrictions(request, call_next):
         response = await call_next(request)
-        # Pop X-Frame-Options to prevent browser from blocking iframe load
-        response.headers.pop("X-Frame-Options", None)
+        # Safe deletion from MutableHeaders in Starlette/FastAPI using 'del' instead of '.pop()'
+        if "X-Frame-Options" in response.headers:
+            del response.headers["X-Frame-Options"]
         # Add modern Content Security Policy for cross-domain embedding
         response.headers["Content-Security-Policy"] = "frame-ancestors *"
         return response
