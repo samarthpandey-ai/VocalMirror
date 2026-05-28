@@ -6,7 +6,7 @@
     <title>VocalMirror — AI Public Speaking Coach</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <style>
         * {
@@ -15,48 +15,18 @@
             padding: 0;
         }
 
+        /* --- Overall Background & Custom theme schema --- */
         body {
-            font-family: 'Outfit', sans-serif;
-            background: #0b0f19;
-            color: #c9d1d9;
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(ellipse at 20% 30%, rgba(17, 153, 142, 0.08) 0%, transparent 60%),
+                        radial-gradient(ellipse at 80% 70%, rgba(56, 239, 125, 0.05) 0%, transparent 60%),
+                        #060b14;
+            color: #e6edf3;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             position: relative;
-        }
-
-        /* Ambient animated backgrounds */
-        body::before {
-            content: '';
-            position: absolute;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(56, 239, 125, 0.1) 0%, rgba(0,0,0,0) 70%);
-            top: -100px;
-            left: -100px;
-            z-index: 0;
-            filter: blur(80px);
-            animation: pulse 12s infinite alternate ease-in-out;
-            pointer-events: none;
-        }
-
-        body::after {
-            content: '';
-            position: absolute;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(124, 131, 253, 0.08) 0%, rgba(0,0,0,0) 70%);
-            bottom: -150px;
-            right: -100px;
-            z-index: 0;
-            filter: blur(100px);
-            animation: pulse 16s infinite alternate-reverse ease-in-out;
-            pointer-events: none;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1) translate(0, 0); }
-            100% { transform: scale(1.2) translate(50px, 30px); }
+            overflow-x: hidden;
         }
 
         .container {
@@ -65,40 +35,48 @@
             width: 100%;
             max-width: 1280px;
             margin: 0 auto;
-            padding: 24px;
+            padding: 0 24px 32px;
             flex: 1;
             display: flex;
             flex-direction: column;
             gap: 24px;
         }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        /* --- Large Centered Brand Header --- */
+        #vm-header {
+            text-align: center;
+            padding: 3rem 1rem 1.5rem;
         }
 
-        .logo {
-            font-size: 1.6rem;
+        #vm-header h1 {
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
             font-weight: 700;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: linear-gradient(135deg, #ffffff 0%, #a8edea 100%);
+            background: linear-gradient(135deg, #38ef7d 0%, #11998e 50%, #a8edea 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            margin: 0;
         }
 
-        .logo span {
-            font-size: 1.8rem;
-            -webkit-text-fill-color: initial;
+        #vm-header p {
+            color: #8b949e;
+            font-size: 1.05rem;
+            margin-top: 0.5rem;
+            font-weight: 300;
+        }
+
+        /* --- Sub-header info panel --- */
+        .subheader-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: -12px;
+            padding: 0 4px;
         }
 
         .badge {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 99px;
             padding: 6px 14px;
@@ -108,7 +86,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(16px);
         }
 
         .badge-dot {
@@ -119,7 +97,7 @@
             box-shadow: 0 0 10px #38ef7d;
         }
 
-        /* Dashboard Grid */
+        /* --- Dashboard Grid Layout --- */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -133,82 +111,81 @@
             }
         }
 
-        /* Glassmorphic Panel */
+        /* --- Sleek Glassmorphic Card Panels --- */
         .panel {
-            background: rgba(13, 17, 23, 0.5);
+            background: rgba(255, 255, 255, 0.04);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 14px;
             padding: 24px;
             display: flex;
             flex-direction: column;
             gap: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .panel:hover {
+            border-color: rgba(56, 239, 125, 0.2);
+            box-shadow: 0 0 24px rgba(56, 239, 125, 0.06);
         }
 
         .panel-title {
             font-size: 0.8rem;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
             color: #8b949e;
-            font-weight: 600;
+            font-weight: 500;
             margin-bottom: 4px;
         }
 
-        /* Recording & Upload Styles */
+        /* --- Recorder & Dropzone --- */
         .recorder-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 16px;
-            padding: 20px 0;
+            padding: 12px 0;
         }
 
         .record-btn {
-            width: 80px;
-            height: 80px;
+            width: 72px;
+            height: 72px;
             border-radius: 50%;
             border: none;
-            background: linear-gradient(135deg, #ff5733 0%, #ff2e00 100%);
-            color: white;
-            font-size: 1.8rem;
+            background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
+            color: #060b14;
+            font-size: 1.6rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            box-shadow: 0 8px 24px rgba(255, 87, 51, 0.4);
-            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(56, 239, 125, 0.2);
+            transition: all 0.3s cubic-bezier(0.1, 0.8, 0.2, 1);
         }
 
-        .record-btn::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 3px solid rgba(255, 87, 51, 0.5);
-            top: 0;
-            left: 0;
-            transform: scale(1);
-            opacity: 0;
-            pointer-events: none;
+        .record-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 30px rgba(56, 239, 125, 0.3);
         }
 
         .record-btn.recording {
             animation: pulse-border 1.5s infinite ease-out;
-            background: linear-gradient(135deg, #ff2e00 0%, #b30000 100%);
+            background: linear-gradient(135deg, #ff5733 0%, #ff2e00 100%);
+            color: white;
+            box-shadow: 0 8px 24px rgba(255, 87, 51, 0.35);
         }
 
         @keyframes pulse-border {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 87, 51, 0.7); }
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 87, 51, 0.6); }
             70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(255, 87, 51, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 87, 51, 0); }
         }
 
         .record-status {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #8b949e;
             font-weight: 500;
         }
@@ -220,48 +197,50 @@
 
         .audio-preview {
             width: 100%;
-            height: 40px;
+            height: 38px;
             border-radius: 99px;
             outline: none;
             display: none;
+            background: rgba(0, 0, 0, 0.3);
         }
 
-        /* File Dropzone */
         .dropzone {
-            border: 2px dashed rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            padding: 24px;
+            border: 1px dashed rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(0, 0, 0, 0.15);
         }
 
         .dropzone:hover, .dropzone.dragover {
-            border-color: #a8edea;
-            background: rgba(168, 237, 234, 0.05);
+            border-color: #38ef7d;
+            background: rgba(56, 239, 125, 0.03);
         }
 
         .dropzone-icon {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             margin-bottom: 8px;
+            color: #8b949e;
         }
 
         .dropzone-text {
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             color: #8b949e;
             line-height: 1.4;
         }
 
+        /* --- Model Toggles & Core Button --- */
         .model-toggle-wrapper {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         .toggle-group {
             display: flex;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.2);
             border-radius: 8px;
             padding: 4px;
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -275,31 +254,31 @@
             padding: 8px;
             border-radius: 6px;
             font-family: inherit;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .toggle-btn.active {
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
+            background: rgba(56, 239, 125, 0.15);
+            color: #38ef7d;
+            border: 1px solid rgba(56, 239, 125, 0.25);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .analyze-btn {
             width: 100%;
-            background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
+            background: linear-gradient(135deg, #38ef7d, #11998e);
             border: none;
-            border-radius: 8px;
-            color: white;
+            border-radius: 12px;
+            color: #060b14;
             padding: 14px;
             font-family: inherit;
             font-size: 0.95rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(56, 239, 125, 0.2);
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -307,19 +286,19 @@
         }
 
         .analyze-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(56, 239, 125, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(56, 239, 125, 0.3);
         }
 
         .analyze-btn:disabled {
-            background: rgba(255, 255, 255, 0.08);
-            color: rgba(255, 255, 255, 0.25);
-            box-shadow: none;
+            background: rgba(255, 255, 255, 0.04) !important;
+            color: rgba(255, 255, 255, 0.15) !important;
+            box-shadow: none !important;
             cursor: not-allowed;
-            transform: none;
+            transform: none !important;
         }
 
-        /* Center Panel - Radar & Incongruence */
+        /* --- Center Panel Visual Layout --- */
         .center-panel {
             min-height: 480px;
             display: flex;
@@ -333,14 +312,14 @@
             height: 380px;
             border-radius: 12px;
             overflow: hidden;
-            background: #0d1117;
+            background: transparent;
         }
 
         .incongruence-box {
             text-align: center;
             padding: 20px;
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(0, 0, 0, 0.15);
             border: 1px solid rgba(255, 255, 255, 0.06);
             min-height: 140px;
             display: flex;
@@ -352,35 +331,36 @@
 
         .score-badge {
             display: inline-block;
-            font-size: 2.8rem;
+            font-size: 3rem;
             font-weight: 700;
             padding: 4px 20px;
-            border-radius: 99px;
+            border-radius: 999px;
             letter-spacing: -1px;
             margin: 8px 0;
-            transition: all 0.3s ease;
+            font-family: inherit;
         }
 
-        .score-badge.low { color: #38ef7d; background: rgba(56,239,125,0.12); border: 1px solid rgba(56,239,125,0.3); }
-        .score-badge.medium { color: #ffc300; background: rgba(255,195,0,0.12); border: 1px solid rgba(255,195,0,0.3); }
-        .score-badge.high { color: #ff5733; background: rgba(255,87,51,0.12); border: 1px solid rgba(255,87,51,0.3); }
+        .score-badge.low { color: #38ef7d; background: rgba(56, 239, 125, 0.12); border: 1px solid rgba(56, 239, 125, 0.3); }
+        .score-badge.medium { color: #ffc300; background: rgba(255, 195, 0, 0.12); border: 1px solid rgba(255, 195, 0, 0.3); }
+        .score-badge.high { color: #ff5733; background: rgba(255, 87, 51, 0.12); border: 1px solid rgba(255, 87, 51, 0.3); }
 
         .score-interp {
             font-size: 0.88rem;
-            color: #c9d1d9;
+            color: #e6edf3;
             max-width: 440px;
-            line-height: 1.5;
+            line-height: 1.6;
+            font-weight: 300;
         }
 
-        /* Right Panel - Transcript & Table */
+        /* --- Right Panel - Transcript --- */
         .transcript-box {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
             padding: 16px;
             font-size: 0.88rem;
             line-height: 1.7;
-            font-family: monospace;
+            font-family: 'JetBrains Mono', monospace;
             max-height: 200px;
             overflow-y: auto;
             color: #e6edf3;
@@ -388,11 +368,18 @@
 
         .divider {
             border: none;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin: 10px 0;
             width: 100%;
         }
 
-        /* Metrics Table & Progress Bar */
+        /* --- Custom Scrollbar --- */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(56, 239, 125, 0.3); }
+
+        /* --- Profile Metrics Table --- */
         .metrics-table {
             width: 100%;
             border-collapse: collapse;
@@ -404,9 +391,10 @@
         }
 
         .metric-label {
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             color: #8b949e;
             white-space: nowrap;
+            font-weight: 500;
         }
 
         .progress-container {
@@ -429,7 +417,7 @@
             height: 100%;
             border-radius: 999px;
             width: 0%;
-            transition: width 0.6s cubic-bezier(0.1, 0.8, 0.2, 1);
+            transition: width 0.8s cubic-bezier(0.1, 0.8, 0.2, 1);
         }
 
         .progress-text {
@@ -439,15 +427,15 @@
             text-align: right;
         }
 
-        /* Glowing Loader Overlay */
+        /* --- Glowing Loader Overlay --- */
         .loader-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(11, 15, 25, 0.85);
-            backdrop-filter: blur(8px);
+            background: rgba(6, 11, 20, 0.85);
+            backdrop-filter: blur(12px);
             z-index: 100;
             display: none;
             flex-direction: column;
@@ -457,8 +445,8 @@
         }
 
         .spinner {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border: 3px solid rgba(255, 255, 255, 0.05);
             border-top: 3px solid #38ef7d;
             border-radius: 50%;
@@ -472,10 +460,35 @@
         }
 
         .loader-text {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 500;
-            color: #ffffff;
+            color: #38ef7d;
             letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Visual Pulse for Processing Dots */
+        .dot-pulse {
+            display: flex;
+            gap: 6px;
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background: #38ef7d;
+            border-radius: 50%;
+            animation: pulse-animation 1.2s infinite ease-in-out;
+        }
+
+        .pulse-dot:nth-child(2) { animation-delay: 0.2s; }
+        .pulse-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse-animation {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
         }
 
         footer {
@@ -492,19 +505,30 @@
 <body>
     <div class="loader-overlay" id="loader">
         <div class="spinner"></div>
-        <div class="loader-text" id="loader-status">Processing speech models...</div>
+        <div class="loader-text">
+            <span id="loader-status">Processing speech models</span>
+            <div class="dot-pulse">
+                <div class="pulse-dot"></div>
+                <div class="pulse-dot"></div>
+                <div class="pulse-dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Large Centered Hero Header -->
+    <div id="vm-header">
+        <h1>🎙 VocalMirror</h1>
+        <p>AI-powered speaking coach · Discover the gap between your words and your voice</p>
     </div>
 
     <div class="container">
-        <header>
-            <div class="logo">
-                <span>🎙</span> VocalMirror
-            </div>
+        <!-- Badge subheader -->
+        <div class="subheader-bar">
             <div class="badge">
                 <div class="badge-dot"></div>
                 Connected to A10G Cloud GPU API
             </div>
-        </header>
+        </div>
 
         <div class="dashboard-grid">
             <!-- Left Column: Input Panel -->
@@ -523,7 +547,7 @@
                 </div>
 
                 <div class="model-toggle-wrapper">
-                    <label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:#8b949e;font-weight:600">Whisper ASR Model</label>
+                    <label style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:#8b949e;font-weight:600">Whisper Model</label>
                     <div class="toggle-group">
                         <button class="toggle-btn" data-model="tiny">Tiny (Faster)</button>
                         <button class="toggle-btn active" data-model="small">Small (Accurate)</button>
@@ -537,7 +561,7 @@
 
             <!-- Center Column: Radar & Score -->
             <div class="panel center-panel">
-                <div class="panel-title">Awaiting speech audio...</div>
+                <div class="panel-title">Speaking Profile Radar</div>
                 <div id="radar-chart"></div>
                 <div class="incongruence-box" id="incongruence-box">
                     <p style="color:#8b949e">Analysis results will be displayed above after uploading or recording speech audio.</p>
@@ -675,7 +699,7 @@
                     angularaxis: {
                         gridcolor: 'rgba(255, 255, 255, 0.08)',
                         linecolor: 'rgba(255, 255, 255, 0.08)',
-                        tickfont: { color: '#8b949e', family: 'Outfit, sans-serif', size: 11 }
+                        tickfont: { color: '#8b949e', family: 'Inter, sans-serif', size: 11 }
                     },
                     bgcolor: '#0d1117'
                 },
@@ -684,7 +708,7 @@
                     bgcolor: 'rgba(255, 255, 255, 0.02)',
                     bordercolor: 'rgba(255, 255, 255, 0.05)',
                     borderwidth: 1,
-                    font: { color: '#8b949e', family: 'Outfit, sans-serif', size: 10 },
+                    font: { color: '#8b949e', family: 'Inter, sans-serif', size: 10 },
                     x: 0.8,
                     y: 0.02
                 },
@@ -693,7 +717,7 @@
                 margin: { t: 50, b: 30, l: 50, r: 50 },
                 title: {
                     text: 'Awaiting Analysis...',
-                    font: { color: '#8b949e', family: 'Outfit, sans-serif', size: 15 },
+                    font: { color: '#8b949e', family: 'Inter, sans-serif', size: 15 },
                     x: 0.5,
                     xanchor: 'center'
                 }
@@ -752,7 +776,7 @@
                 isRecording = false;
                 recordBtn.classList.remove("recording");
                 recordBtn.innerText = "🎤";
-                recordStatus.innerText = "Speech captured! Ready to analyze.";
+                recordStatus.innerText = "Captured recorded speech! Ready to analyze.";
                 recordStatus.classList.remove("active");
             }
         });
@@ -816,7 +840,7 @@
 
             // Trigger loading state
             loader.style.display = "flex";
-            loaderStatus.innerText = "Transcribing speech via GPU ASR...";
+            loaderStatus.innerText = "Transcribing speech via GPU ASR";
 
             const formData = new FormData();
             formData.append("file", audioBlob, "speech_input.wav");
@@ -835,7 +859,7 @@
                 const data = await response.json();
                 
                 // Update UI elements
-                loaderStatus.innerText = "Updating analytical profile...";
+                loaderStatus.innerText = "Updating analytical profile";
                 
                 // 1. Render Transcript with Highlighting
                 const highlightedHtml = highlightFillers(data.text, data.found_fillers);
@@ -844,7 +868,7 @@
                     : `<div style="margin-top:0.75rem;font-size:0.8rem;color:#38ef7d;">✓ Excellent filler control. No fillers detected.</div>`;
                 
                 transcriptBox.innerHTML = `
-                    <div style="font-family:'Outfit', sans-serif; font-size:0.88rem; line-height:1.7; color:#c9d1d9; max-height: 180px; overflow-y: auto;">
+                    <div style="font-family:'Inter', sans-serif; font-size:0.88rem; line-height:1.7; color:#c9d1d9; max-height: 180px; overflow-y: auto;">
                         ${highlightedHtml}
                     </div>
                     ${fillerNote}
@@ -941,7 +965,7 @@
                         angularaxis: {
                             gridcolor: 'rgba(255, 255, 255, 0.08)',
                             linecolor: 'rgba(255, 255, 255, 0.08)',
-                            tickfont: { color: '#c9d1d9', family: 'Outfit, sans-serif', size: 12 }
+                            tickfont: { color: '#c9d1d9', family: 'Inter, sans-serif', size: 12 }
                         },
                         bgcolor: '#0d1117'
                     },
@@ -950,7 +974,7 @@
                         bgcolor: 'rgba(255, 255, 255, 0.02)',
                         bordercolor: 'rgba(255, 255, 255, 0.05)',
                         borderwidth: 1,
-                        font: { color: '#c9d1d9', family: 'Outfit, sans-serif', size: 10 },
+                        font: { color: '#c9d1d9', family: 'Inter, sans-serif', size: 10 },
                         x: 0.8,
                         y: 0.02
                     },
@@ -959,7 +983,7 @@
                     margin: { t: 60, b: 30, l: 50, r: 50 },
                     title: {
                         text: 'Speaking Profile Radar',
-                        font: { color: '#ffffff', family: 'Outfit, sans-serif', size: 16 },
+                        font: { color: '#ffffff', family: 'Inter, sans-serif', size: 16 },
                         x: 0.5,
                         xanchor: 'center'
                     }
