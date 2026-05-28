@@ -1,0 +1,19 @@
+{
+  "calm": {
+    "pitch_variance_mean": 0.18,
+    "pitch_variance_std": 0.07,
+    "speech_rate_mean": 3.8,
+    "speech_rate_std": 0.9,
+    "pause_freq_mean": 0.4,
+    "pause_freq_std": 0.18
+  },
+  "nervous": {
+    "pitch_variance_mean": 0.45,
+    "pitch_variance_std": 0.12,
+    "speech_rate_mean": 5.1,
+    "speech_rate_std": 1.2,
+    "pause_freq_mean": 1.1,
+    "pause_freq_std": 0.35
+  },
+  "baseline_note": "Derived from RAVDESS audio-only subset, calm and fearful emotion classes. Values represent mean/std of normalized features across 192 recordings."
+}

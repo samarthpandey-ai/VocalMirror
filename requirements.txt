@@ -1,0 +1,31 @@
+# ============================================================
+# VocalMirror — requirements.txt
+# Optimized for HuggingFace Spaces deployment (Python 3.10+)
+# ============================================================
+
+# ── Core ML ─────────────────────────────────────────────────
+openai-whisper
+torch>=2.1.0
+torchaudio>=2.1.0
+
+# ── Acoustic Analysis ────────────────────────────────────────
+librosa>=0.10.1
+soundfile>=0.12.1
+numpy>=1.24.0
+scipy>=1.11.0
+
+# ── NLP ──────────────────────────────────────────────────────
+transformers>=4.38.0
+huggingface_hub>=0.20.0
+# NOTE: en_core_web_sm is installed separately via:
+#   python -m spacy download en_core_web_sm
+# Do NOT install the spaCy model via pip URL — it breaks with pip >= 23
+spacy>=3.7.2
+
+# ── UI & Visualization ───────────────────────────────────────
+gradio>=4.26.0
+plotly>=5.20.0
+
+# ── Utilities ────────────────────────────────────────────────
+python-dotenv>=1.0.1
+ffmpeg-python>=0.2.0

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VocalMirror — AI Public Speaking Coach</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0b0f19;
+            color: #c9d1d9;
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Ambient animated backgrounds */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(56, 239, 125, 0.15) 0%, rgba(0,0,0,0) 70%);
+            top: -100px;
+            left: -100px;
+            z-index: 0;
+            filter: blur(80px);
+            animation: pulse 12s infinite alternate ease-in-out;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(124, 131, 253, 0.12) 0%, rgba(0,0,0,0) 70%);
+            bottom: -150px;
+            right: -100px;
+            z-index: 0;
+            filter: blur(100px);
+            animation: pulse 16s infinite alternate-reverse ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.2) translate(50px, 30px); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 8px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #ffffff 0%, #a8edea 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo span {
+            font-size: 1.6rem;
+            -webkit-text-fill-color: initial;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 99px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #8b949e;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .badge:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(56, 239, 125, 0.3);
+            color: #38ef7d;
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #38ef7d;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #38ef7d;
+        }
+
+        .app-frame-wrapper {
+            flex: 1;
+            width: 100%;
+            background: rgba(13, 17, 23, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: border-color 0.3s ease;
+        }
+
+        .app-frame-wrapper:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+        }
+
+        footer {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #8b949e;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span>🎙</span> VocalMirror
+            </div>
+            <div class="badge">
+                <div class="badge-dot"></div>
+                Powered by A10G Cloud GPU via Modal
+            </div>
+        </header>
+
+        <div class="app-frame-wrapper">
+            <iframe 
+                src="https://samarthpan123--vocal-mirror-serve.modal.run" 
+                allow="microphone; clipboard-write"
+                referrerpolicy="no-referrer"
+            ></iframe>
+        </div>
+
+        <footer>
+            VocalMirror v1.0 · Multimodal AI Public Speaking Coach · Built with Whisper & RoBERTa
+        </footer>
+    </div>
+</body>
+</html>
