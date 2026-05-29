@@ -12,8 +12,7 @@
 
 ### 🌐 Live Endpoints
 
-* **🚀 Premium Interactive Frontend (Vercel)**: [https://vocal-mirror-tau.vercel.app](https://vocal-mirror-tau.vercel.app)
-* **⚡ Serverless Cloud API (Modal)**: [https://samarthpan123--vocal-mirror-serve.modal.run/analyze](https://samarthpan123--vocal-mirror-serve.modal.run/analyze)
+* **🚀 Live Demo**: https://vocalmirror.samarthkrpandey.com/
 
 ---
 
