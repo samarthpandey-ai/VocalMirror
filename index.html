@@ -500,26 +500,6 @@
             border-top: 1px solid rgba(255, 255, 255, 0.06);
             z-index: 10;
         }
-
-        /* --- Multilingual Capability Indicator --- */
-        .multilingual-badge {
-            margin-top: 12px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 0.75rem;
-            color: #94a3b8;
-            line-height: 1.5;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-        }
-        
-        .multilingual-badge strong {
-            color: #2dd4bf;
-            font-weight: 600;
-        }
     </style>
 </head>
 <body>
@@ -535,12 +515,17 @@
         </div>
     </div>
 
+    <!-- Large Centered Hero Header -->
     <div id="vm-header">
         <h1>🎙 VocalMirror</h1>
         <p>AI-powered speaking coach · Discover the gap between your words and your voice</p>
     </div>
+    <div>
+        <strong>Native Multilingual Engine Active:</strong> Fully supports 99+ spoken languages (including English, Hindi, Punjabi, German, Spanish, French) with automatic language spoken-detection and translation-free NLP scoring.
+    </div>
 
     <div class="container">
+        <!-- Badge subheader -->
         <div class="subheader-bar">
             <div class="badge">
                 <div class="badge-dot"></div>
@@ -549,6 +534,7 @@
         </div>
 
         <div class="dashboard-grid">
+            <!-- Left Column: Input Panel -->
             <div class="panel">
                 <div class="panel-title">Speech Input</div>
                 
@@ -578,15 +564,9 @@
                 <div class="warmup-note">
                         ⚡ First analysis may take 60–90 seconds while the GPU server warms up. Subsequent analyses will be instant.
                 </div>
-                
-                <div class="multilingual-badge">
-                    <div style="font-size: 1.1rem;">🌍</div>
-                    <div>
-                        <strong>Native Multilingual Engine Active:</strong> Fully supports 99+ spoken languages (including English, Hindi, Punjabi, German, Spanish, French) with automatic language spoken-detection and translation-free NLP scoring.
-                    </div>
-                </div>
             </div>
 
+            <!-- Center Column: Radar & Score -->
             <div class="panel center-panel">
                 <div class="panel-title">Speaking Profile Radar</div>
                 <div id="radar-chart"></div>
@@ -595,6 +575,7 @@
                 </div>
             </div>
 
+            <!-- Right Column: Transcript & Breakdown -->
             <div class="panel">
                 <div class="panel-title">Speech Transcript</div>
                 <div class="transcript-box" id="transcript-box">
