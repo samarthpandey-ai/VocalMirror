@@ -28,8 +28,13 @@ _BASELINES_PATH: Path = Path(__file__).parent / "baselines.json"
 # Cached baselines dict so the file is read only once per process
 _baselines_cache: dict[str, Any] | None = None
 
-# Force MPS if available, fallback to CPU
-_DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
+# Unified device selection: cuda -> mps -> cpu
+if torch.cuda.is_available():
+    _DEVICE = "cuda"
+elif torch.backends.mps.is_available():
+    _DEVICE = "mps"
+else:
+    _DEVICE = "cpu"
 logger.info("Using device for XLS-R Wav2Vec2 Acoustic Analysis: %s", _DEVICE)
 
 # Cache for XLS-R feature extractor and model
@@ -68,7 +73,13 @@ def _get_wav2vec2() -> tuple[Any, Any]:
         from transformers import Wav2Vec2FeatureExtractor, Wav2Vec2Model
         logger.info("Loading Wav2Vec2 (XLS-R) model 'facebook/wav2vec2-large-xlsr-53' on %s...", _DEVICE)
         _feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained("facebook/wav2vec2-large-xlsr-53")
-        _model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-xlsr-53").to(_DEVICE)
+        
+        # Load in half-precision on CUDA for maximum performance
+        torch_dtype = torch.float16 if _DEVICE == "cuda" else torch.float32
+        _model = Wav2Vec2Model.from_pretrained(
+            "facebook/wav2vec2-large-xlsr-53",
+            torch_dtype=torch_dtype
+        ).to(_DEVICE)
         logger.info("Wav2Vec2 (XLS-R) model loaded successfully.")
     return _feature_extractor, _model
 
@@ -140,9 +151,10 @@ def compute_acoustic_nervousness(
         try:
             feature_extractor, model = _get_wav2vec2()
             
-            # Format inputs
+            # Format inputs and cast to float16 if on CUDA
             inputs = feature_extractor(raw_audio_16k, return_tensors="pt", sampling_rate=16000)
-            input_values = inputs.input_values.to(_DEVICE)
+            torch_dtype = torch.float16 if _DEVICE == "cuda" else torch.float32
+            input_values = inputs.input_values.to(device=_DEVICE, dtype=torch_dtype)
             
             with torch.no_grad():
                 outputs = model(input_values)

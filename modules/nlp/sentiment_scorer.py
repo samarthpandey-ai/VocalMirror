@@ -15,9 +15,17 @@ from transformers import pipeline  # type: ignore
 
 logger = logging.getLogger(__name__)
 
-# Force MPS if available, fallback to CPU
-_DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
+# Unified device selection: cuda -> mps -> cpu
+if torch.cuda.is_available():
+    _DEVICE = "cuda"
+elif torch.backends.mps.is_available():
+    _DEVICE = "mps"
+else:
+    _DEVICE = "cpu"
 logger.info("Using device for Sentiment Analysis: %s", _DEVICE)
+
+# Load in half-precision on CUDA for maximum performance
+_torch_dtype = torch.float16 if _DEVICE == "cuda" else torch.float32
 
 # ---------------------------------------------------------------------------
 # Module-level eager cache
@@ -29,6 +37,7 @@ _pipeline = pipeline(
     truncation=True,
     max_length=512,
     device=_DEVICE,
+    torch_dtype=_torch_dtype,
 )
 
 
@@ -82,7 +91,8 @@ def score_sentiment(text: str) -> dict:
 
     # The pipeline returns a list of lists when top_k=None:
     # [[{"label": ..., "score": ...}, ...]]
-    raw: list[list[dict]] = pipe(text)  # type: ignore[operator]
+    with torch.no_grad():
+        raw: list[list[dict]] = pipe(text)  # type: ignore[operator]
     scores_list: list[dict] = raw[0]
 
     scores: dict[str, float] = {}

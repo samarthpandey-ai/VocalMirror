@@ -17,8 +17,13 @@ import whisper
 
 logger = logging.getLogger(__name__)
 
-# Force MPS if available, fallback to CPU
-_DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
+# Unified device selection: cuda -> mps -> cpu
+if torch.cuda.is_available():
+    _DEVICE = "cuda"
+elif torch.backends.mps.is_available():
+    _DEVICE = "mps"
+else:
+    _DEVICE = "cpu"
 logger.info("Using device for Whisper transcription: %s", _DEVICE)
 
 # Module-level model cache: {model_size: whisper.Whisper}
@@ -114,7 +119,9 @@ def transcribe_audio(audio_path: str, model_size: str = "small") -> dict:
     # --- Run transcription ---
     try:
         logger.info("Transcribing '%s' with Whisper '%s' on %s.", audio_path, model_size, _DEVICE)
-        result = model.transcribe(audio_path, fp16=False)
+        # Whisper fp16 parameter is True if CUDA is available, False otherwise
+        use_fp16 = torch.cuda.is_available()
+        result = model.transcribe(audio_path, fp16=use_fp16)
     except Exception as exc:
         raise RuntimeError(
             f"Whisper transcription failed for '{audio_path}': {exc}"
@@ -125,6 +132,11 @@ def transcribe_audio(audio_path: str, model_size: str = "small") -> dict:
         if _DEVICE == "mps":
             try:
                 torch.mps.empty_cache()
+            except Exception:
+                pass
+        elif _DEVICE == "cuda":
+            try:
+                torch.cuda.empty_cache()
             except Exception:
                 pass
 

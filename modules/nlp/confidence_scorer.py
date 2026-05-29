@@ -16,9 +16,17 @@ from transformers import pipeline  # type: ignore
 
 logger = logging.getLogger(__name__)
 
-# Force MPS if available, fallback to CPU
-_DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
+# Unified device selection: cuda -> mps -> cpu
+if torch.cuda.is_available():
+    _DEVICE = "cuda"
+elif torch.backends.mps.is_available():
+    _DEVICE = "mps"
+else:
+    _DEVICE = "cpu"
 logger.info("Using device for Zero-Shot Confidence Analysis: %s", _DEVICE)
+
+# Load in half-precision on CUDA for maximum performance
+_torch_dtype = torch.float16 if _DEVICE == "cuda" else torch.float32
 
 # ---------------------------------------------------------------------------
 # Module-level eager cache
@@ -27,6 +35,7 @@ _zero_shot_pipeline = pipeline(
     task="zero-shot-classification",
     model="joeddav/xlm-roberta-large-xnli",
     device=_DEVICE,
+    torch_dtype=_torch_dtype,
 )
 
 
@@ -72,7 +81,8 @@ def score_confidence(text: str) -> dict:
         pipe = _get_pipeline()
         
         # Predict the candidate labels
-        result = pipe(text, candidate_labels=["confident", "hesitant"])
+        with torch.no_grad():
+            result = pipe(text, candidate_labels=["confident", "hesitant"])
         
         # Format mapping: e.g. {"labels": ["confident", "hesitant"], "scores": [0.85, 0.15]}
         scores = dict(zip(result["labels"], result["scores"]))

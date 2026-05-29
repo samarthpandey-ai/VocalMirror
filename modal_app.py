@@ -111,9 +111,14 @@ def serve():
             shutil.copyfileobj(file.file, tmp)
             tmp.close()
 
+            import asyncio
+
             # Execute pipeline
-            # 1. Speech Transcription
-            transcription = transcribe_audio(tmp_path, model_size=model_size)
+            # 1. Speech Transcription and Acoustic Feature Extraction in parallel
+            transcription, acoustic_features = await asyncio.gather(
+                asyncio.to_thread(transcribe_audio, tmp_path, model_size=model_size),
+                asyncio.to_thread(extract_acoustic_features, tmp_path)
+            )
             text = transcription.get("text", "").strip()
             
             if not text:
@@ -122,15 +127,16 @@ def serve():
                     detail="Audio could not be transcribed. Please check recording quality or duration.",
                 )
 
-            # 2. Acoustic Feature Extraction
-            acoustic_features = extract_acoustic_features(tmp_path)
+            # Compute acoustic scores from features
             acoustic_scores = compute_acoustic_nervousness(acoustic_features)
 
-            # 3. NLP Scoring
-            sentiment = score_sentiment(text)
-            confidence = score_confidence(text)
-            fillers = detect_fillers(text)
-            vocab = analyze_vocabulary(text)
+            # 2. NLP Scoring in parallel (converts text to positive/neutral/negative, confident, and fillers)
+            sentiment, confidence, fillers, vocab = await asyncio.gather(
+                asyncio.to_thread(score_sentiment, text),
+                asyncio.to_thread(score_confidence, text),
+                asyncio.to_thread(detect_fillers, text),
+                asyncio.to_thread(analyze_vocabulary, text)
+            )
 
             # 4. Fusion Scoring
             nlp_aggregated = aggregate_nlp_outputs(sentiment, confidence, fillers, vocab)
