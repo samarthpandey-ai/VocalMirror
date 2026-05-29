@@ -267,6 +267,13 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
+        /* Analyze Button Wrapper & Note */
+        .analyze-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
         .analyze-btn {
             width: 100%;
             background: linear-gradient(135deg, #38ef7d, #11998e);
@@ -296,6 +303,13 @@
             box-shadow: none !important;
             cursor: not-allowed;
             transform: none !important;
+        }
+
+        .warmup-note {
+            font-size: 0.72rem;
+            color: #8b949e;
+            text-align: center;
+            line-height: 1.4;
         }
 
         /* --- Center Panel Visual Layout --- */
@@ -515,14 +529,12 @@
         </div>
     </div>
 
-    <!-- Large Centered Hero Header -->
     <div id="vm-header">
         <h1>🎙 VocalMirror</h1>
         <p>AI-powered speaking coach · Discover the gap between your words and your voice</p>
     </div>
 
     <div class="container">
-        <!-- Badge subheader -->
         <div class="subheader-bar">
             <div class="badge">
                 <div class="badge-dot"></div>
@@ -531,7 +543,6 @@
         </div>
 
         <div class="dashboard-grid">
-            <!-- Left Column: Input Panel -->
             <div class="panel">
                 <div class="panel-title">Speech Input</div>
                 
@@ -554,12 +565,16 @@
                     </div>
                 </div>
 
-                <button class="analyze-btn" id="analyze-btn" disabled>
-                    <span>✦</span> Analyze My Speech
-                </button>
+                <div class="analyze-wrapper">
+                    <button class="analyze-btn" id="analyze-btn" disabled>
+                        <span>✦</span> Analyze My Speech
+                    </button>
+                    <div class="warmup-note">
+                        ⚡ First analysis may take 60–90 seconds while the GPU server warms up. Subsequent analyses will be instant.
+                    </div>
+                </div>
             </div>
 
-            <!-- Center Column: Radar & Score -->
             <div class="panel center-panel">
                 <div class="panel-title">Speaking Profile Radar</div>
                 <div id="radar-chart"></div>
@@ -568,7 +583,6 @@
                 </div>
             </div>
 
-            <!-- Right Column: Transcript & Breakdown -->
             <div class="panel">
                 <div class="panel-title">Speech Transcript</div>
                 <div class="transcript-box" id="transcript-box">
@@ -629,7 +643,7 @@
         </div>
 
         <footer>
-            VocalMirror v1.0 · Multimodal AI Public Speaking Coach · Decoupled Cloud Architecture (Modal + Vercel)
+            VocalMirror v1.0 · Multimodal AI Public Speaking Coach · Designed & Developed by Samarth Pandey
         </footer>
     </div>
 
@@ -1007,21 +1021,4 @@
                     margin: { t: 60, b: 30, l: 50, r: 50 },
                     title: {
                         text: 'Speaking Profile Radar',
-                        font: { color: '#ffffff', family: 'Inter, sans-serif', size: 16 },
-                        x: 0.5,
-                        xanchor: 'center'
-                    }
-                };
-
-                Plotly.newPlot('radar-chart', [traceIdeal, traceUser], layout, {responsive: true, displayModeBar: false});
-
-            } catch (err) {
-                console.error("Speech analysis failed:", err);
-                alert(`Analysis Error: ${err.message}`);
-            } finally {
-                loader.style.display = "none";
-            }
-        });
-    </script>
-</body>
-</html>
+                        font: { color: '#ffffff', family: 'Inter, sans-serif',
