@@ -31,13 +31,7 @@ _model_cache: dict[str, Any] = {}
 
 SUPPORTED_SIZES = frozenset({"tiny", "small"})
 
-# Eagerly load all supported sizes at import time
-for size in SUPPORTED_SIZES:
-    try:
-        logger.info("Eagerly pre-loading Whisper model '%s' on %s...", size, _DEVICE)
-        _model_cache[size] = whisper.load_model(size, device=_DEVICE)
-    except Exception as exc:
-        logger.error("Failed to eagerly load Whisper model '%s': %s", size, exc)
+# Whisper models are loaded lazily and cached on first use to ensure fast import times.
 
 
 def _load_model(model_size: str) -> Any:

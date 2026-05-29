@@ -205,20 +205,18 @@ def extract_acoustic_features(audio_path: str) -> dict:
 
     # --- Load audio ---
     try:
-        y, sr = librosa.load(audio_path, sr=_TARGET_SR, mono=False)
+        # Load directly at 16kHz for Wav2Vec2 and downstream metrics (highly standard for speech ML)
+        y_16k, sr = librosa.load(audio_path, sr=16000, mono=True)
     except Exception as exc:
         raise RuntimeError(
             f"librosa failed to load '{audio_path}': {exc}"
         ) from exc
 
-    # Ensure mono
-    y = _to_mono(y)
-
-    if y.size == 0:
+    if y_16k.size == 0:
         raise ValueError(f"Audio file '{audio_path}' loaded as empty array.")
 
-    duration = float(len(y)) / float(sr)
-    logger.info("Loaded audio: %.2fs @ %dHz (%d samples).", duration, sr, len(y))
+    duration = float(len(y_16k)) / 16000.0
+    logger.info("Loaded audio: %.2fs @ 16000Hz (%d samples).", duration, len(y_16k))
 
     # --- Edge case: very short clips ---
     if duration < _MIN_AUDIO_DURATION_S:
@@ -227,13 +225,18 @@ def extract_acoustic_features(audio_path: str) -> dict:
             duration, _MIN_AUDIO_DURATION_S,
         )
 
-    # --- F0 extraction via pyin ---
+    # --- F0 extraction via pyin (optimized downsampled grid) ---
     try:
+        # Downsample 16kHz audio to 8kHz for fast pyin pitch tracking
+        y_8k = librosa.resample(y_16k, orig_sr=16000, target_sr=8000)
+        
+        # Run pyin with optimized settings (fmax=300 Hz is standard human limit, hop_length=256 at 8kHz)
         f0, voiced_flag, _voiced_probs = librosa.pyin(
-            y,
+            y_8k,
             fmin=75.0,
-            fmax=500.0,
-            sr=sr,
+            fmax=300.0,
+            sr=8000,
+            hop_length=256,
         )
         # pyin returns NaN for unvoiced; voiced_flag is a boolean array
         voiced_flag = voiced_flag.astype(bool)
@@ -243,15 +246,8 @@ def extract_acoustic_features(audio_path: str) -> dict:
         voiced_flag = np.zeros(1, dtype=bool)
 
     pitch_variance, raw_f0 = _compute_pitch_variance(f0, voiced_flag)
-    speech_rate = _compute_speech_rate(y, sr, duration)
-    pause_frequency = _compute_pause_frequency(y, sr, duration)
-
-    # Extract 16kHz audio array for Wav2Vec2
-    try:
-        y_16k, _ = librosa.load(audio_path, sr=16000, mono=True)
-    except Exception as exc:
-        logger.error("Failed to load 16kHz audio for XLS-R: %s", exc)
-        y_16k = np.zeros(0, dtype=np.float32)
+    speech_rate = _compute_speech_rate(y_16k, 16000, duration)
+    pause_frequency = _compute_pause_frequency(y_16k, 16000, duration)
 
     return {
         "pitch_variance": pitch_variance,

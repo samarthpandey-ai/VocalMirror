@@ -28,21 +28,26 @@ logger.info("Using device for Sentiment Analysis: %s", _DEVICE)
 _torch_dtype = torch.float16 if _DEVICE == "cuda" else torch.float32
 
 # ---------------------------------------------------------------------------
-# Module-level eager cache
+# Module-level cache
 # ---------------------------------------------------------------------------
-_pipeline = pipeline(
-    task="text-classification",
-    model="cardiffnlp/twitter-xlm-roberta-base-sentiment",
-    top_k=None,  # return all label scores
-    truncation=True,
-    max_length=512,
-    device=_DEVICE,
-    torch_dtype=_torch_dtype,
-)
+_pipeline = None
 
 
 def _get_pipeline():
-    """Return the cached sentiment pipeline."""
+    """Return the cached sentiment pipeline, lazily instantiating it on first call."""
+    global _pipeline
+    if _pipeline is None:
+        logger.info("Lazily loading sentiment classification model 'cardiffnlp/twitter-xlm-roberta-base-sentiment' on %s...", _DEVICE)
+        _pipeline = pipeline(
+            task="text-classification",
+            model="cardiffnlp/twitter-xlm-roberta-base-sentiment",
+            top_k=None,  # return all label scores
+            truncation=True,
+            max_length=512,
+            device=_DEVICE,
+            torch_dtype=_torch_dtype,
+        )
+        logger.info("Sentiment model loaded successfully.")
     return _pipeline
 
 

@@ -29,18 +29,23 @@ logger.info("Using device for Zero-Shot Confidence Analysis: %s", _DEVICE)
 _torch_dtype = torch.float16 if _DEVICE == "cuda" else torch.float32
 
 # ---------------------------------------------------------------------------
-# Module-level eager cache
+# Module-level cache
 # ---------------------------------------------------------------------------
-_zero_shot_pipeline = pipeline(
-    task="zero-shot-classification",
-    model="joeddav/xlm-roberta-large-xnli",
-    device=_DEVICE,
-    torch_dtype=_torch_dtype,
-)
+_zero_shot_pipeline = None
 
 
 def _get_pipeline():
-    """Return the cached zero-shot classification pipeline."""
+    """Return the cached zero-shot classification pipeline, lazily instantiating it on first call."""
+    global _zero_shot_pipeline
+    if _zero_shot_pipeline is None:
+        logger.info("Lazily loading zero-shot classification model 'joeddav/xlm-roberta-large-xnli' on %s...", _DEVICE)
+        _zero_shot_pipeline = pipeline(
+            task="zero-shot-classification",
+            model="joeddav/xlm-roberta-large-xnli",
+            device=_DEVICE,
+            torch_dtype=_torch_dtype,
+        )
+        logger.info("Zero-shot model loaded successfully.")
     return _zero_shot_pipeline
 
 
